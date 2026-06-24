@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="de" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>denkr — Digitales Whiteboard</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+
+  <!-- Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <!-- ═══════════════════════════════════════════
+       TOOLBAR
+  ═══════════════════════════════════════════ -->
+  <header class="toolbar" id="toolbar">
+
+    <!-- Left: Logo -->
+    <div class="toolbar-left">
+      <div class="logo">
+        <span class="logo-text">denkr</span>
+      </div>
+    </div>
+
+    <!-- Center: Board Name -->
+    <div class="toolbar-center">
+      <input
+        type="text"
+        id="boardName"
+        class="board-name-input"
+        value="Neues Board"
+        placeholder="Board benennen…"
+        spellcheck="false"
+      />
+    </div>
+
+    <!-- Right: Actions -->
+    <div class="toolbar-right">
+
+      <div class="toolbar-group">
+        <!-- Search -->
+        <button class="tb-btn" id="btnSearch" title="Suchen (Strg+F)">
+          <i class="fa-regular fa-magnifying-glass"></i>
+        </button>
+      </div>
+
+      <div class="toolbar-separator"></div>
+
+      <div class="toolbar-group">
+        <!-- New Board -->
+        <button class="tb-btn" id="btnNew" title="Neues Board">
+          <i class="fa-regular fa-file-plus"></i>
+        </button>
+        <!-- Open Board -->
+        <button class="tb-btn" id="btnOpen" title="Board öffnen">
+          <i class="fa-regular fa-folder-open"></i>
+        </button>
+        <!-- Save Board -->
+        <button class="tb-btn" id="btnSave" title="Board speichern (Strg+S)">
+          <i class="fa-regular fa-floppy-disk"></i>
+        </button>
+        <!-- Export -->
+        <button class="tb-btn tb-btn--has-dropdown" id="btnExport" title="Exportieren">
+          <i class="fa-regular fa-arrow-up-from-bracket"></i>
+        </button>
+      </div>
+
+      <div class="toolbar-separator"></div>
+
+      <div class="toolbar-group">
+        <!-- Dark Mode -->
+        <button class="tb-btn" id="btnDarkMode" title="Dark Mode umschalten">
+          <i class="fa-regular fa-moon" id="darkModeIcon"></i>
+        </button>
+        <!-- Settings -->
+        <button class="tb-btn" id="btnSettings" title="Einstellungen">
+          <i class="fa-regular fa-gear"></i>
+        </button>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- ═══════════════════════════════════════════
+       LEFT PANEL — Block Palette
+  ═══════════════════════════════════════════ -->
+  <aside class="side-panel" id="sidePanel">
+    <div class="panel-section">
+      <p class="panel-label">Elemente</p>
+      <button class="panel-btn" data-type="note" title="Notizblock hinzufügen">
+        <i class="fa-regular fa-note-sticky"></i>
+        <span>Notiz</span>
+      </button>
+      <button class="panel-btn" data-type="richtext" title="Dokument hinzufügen">
+        <i class="fa-regular fa-file-lines"></i>
+        <span>Dokument</span>
+      </button>
+      <button class="panel-btn" data-type="image" title="Bild hochladen">
+        <i class="fa-regular fa-image"></i>
+        <span>Bild</span>
+      </button>
+      <button class="panel-btn" data-type="pdf" title="PDF hochladen">
+        <i class="fa-regular fa-file-pdf"></i>
+        <span>PDF</span>
+      </button>
+      <button class="panel-btn" data-type="link" title="Link hinzufügen">
+        <i class="fa-regular fa-link"></i>
+        <span>Link</span>
+      </button>
+      <button class="panel-btn" data-type="task" title="Aufgabenliste">
+        <i class="fa-regular fa-list-check"></i>
+        <span>Aufgaben</span>
+      </button>
+    </div>
+
+    <div class="panel-section">
+      <p class="panel-label">Ansicht</p>
+      <button class="panel-btn" id="btnFitAll" title="Alle anzeigen">
+        <i class="fa-regular fa-expand"></i>
+        <span>Übersicht</span>
+      </button>
+      <button class="panel-btn" id="btnZoomReset" title="Zoom zurücksetzen">
+        <i class="fa-regular fa-arrows-to-dot"></i>
+        <span>Zentrieren</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- ═══════════════════════════════════════════
+       MAIN CANVAS AREA
+  ═══════════════════════════════════════════ -->
+  <main class="canvas-wrapper" id="canvasWrapper">
+
+    <!-- Grid background (CSS) -->
+    <div class="canvas-grid" id="canvasGrid"></div>
+
+    <!-- The infinite canvas -->
+    <div class="canvas" id="canvas">
+
+      <!-- SVG layer for connections -->
+      <svg class="connections-svg" id="connectionsSvg" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <marker id="arrowhead" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+            <polygon points="0 0, 8 3, 0 6" class="arrow-marker" />
+          </marker>
+        </defs>
+        <g id="connectionsGroup"></g>
+        <!-- Temp connection line while drawing -->
+        <path id="tempConnection" class="connection-temp" style="display:none;" />
+      </svg>
+
+      <!-- Nodes rendered here by JS -->
+      <div class="nodes-layer" id="nodesLayer"></div>
+
+    </div>
+  </main>
+
+  <!-- ═══════════════════════════════════════════
+       BOTTOM TOOLBAR — Zoom Controls + Minimap
+  ═══════════════════════════════════════════ -->
+  <div class="bottom-bar" id="bottomBar">
+    <div class="zoom-controls">
+      <button class="zoom-btn" id="btnZoomOut" title="Verkleinern">
+        <i class="fa-regular fa-minus"></i>
+      </button>
+      <span class="zoom-label" id="zoomLabel">100%</span>
+      <button class="zoom-btn" id="btnZoomIn" title="Vergrößern">
+        <i class="fa-regular fa-plus"></i>
+      </button>
+    </div>
+
+    <!-- Minimap -->
+    <div class="minimap" id="minimap">
+      <canvas class="minimap-canvas" id="minimapCanvas"></canvas>
+      <div class="minimap-viewport" id="minimapViewport"></div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       CONTEXT MENU
+  ═══════════════════════════════════════════ -->
+  <div class="context-menu" id="contextMenu" style="display:none;">
+    <button class="ctx-item" data-action="duplicate">
+      <i class="fa-regular fa-copy"></i> Duplizieren
+    </button>
+    <button class="ctx-item" data-action="connect">
+      <i class="fa-regular fa-link"></i> Verbinden
+    </button>
+    <div class="ctx-separator"></div>
+    <button class="ctx-item ctx-danger" data-action="delete">
+      <i class="fa-regular fa-trash-can"></i> Löschen
+    </button>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       SEARCH PANEL
+  ═══════════════════════════════════════════ -->
+  <div class="search-panel" id="searchPanel" style="display:none;">
+    <div class="search-inner">
+      <i class="fa-regular fa-magnifying-glass search-icon"></i>
+      <input type="text" id="searchInput" placeholder="Suchen…" autocomplete="off" />
+      <button class="search-close" id="searchClose">
+        <i class="fa-regular fa-xmark"></i>
+      </button>
+    </div>
+    <div class="search-results" id="searchResults"></div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       SETTINGS MODAL
+  ═══════════════════════════════════════════ -->
+  <div class="modal-overlay" id="settingsOverlay" style="display:none;">
+    <div class="modal" id="settingsModal">
+      <div class="modal-header">
+        <h2>Einstellungen</h2>
+        <button class="modal-close" id="settingsClose">
+          <i class="fa-regular fa-xmark"></i>
+        </button>
+      </div>
+      <div class="modal-body">
+
+        <div class="setting-row">
+          <label class="setting-label">
+            <span>Raster anzeigen</span>
+            <small>Gitternetz auf der Arbeitsfläche</small>
+          </label>
+          <label class="toggle">
+            <input type="checkbox" id="settingGrid" checked />
+            <span class="toggle-track"><span class="toggle-thumb"></span></span>
+          </label>
+        </div>
+
+        <div class="setting-row">
+          <label class="setting-label">
+            <span>Am Raster einrasten</span>
+            <small>Elemente rasten am Gitter ein</small>
+          </label>
+          <label class="toggle">
+            <input type="checkbox" id="settingSnap" />
+            <span class="toggle-track"><span class="toggle-thumb"></span></span>
+          </label>
+        </div>
+
+        <div class="setting-row">
+          <label class="setting-label">
+            <span>Dark Mode</span>
+            <small>Dunkles Farbschema</small>
+          </label>
+          <label class="toggle">
+            <input type="checkbox" id="settingDark" />
+            <span class="toggle-track"><span class="toggle-thumb"></span></span>
+          </label>
+        </div>
+
+        <div class="setting-row">
+          <label class="setting-label">
+            <span>Animationen</span>
+            <small>Übergänge und Effekte</small>
+          </label>
+          <label class="toggle">
+            <input type="checkbox" id="settingAnimations" checked />
+            <span class="toggle-track"><span class="toggle-thumb"></span></span>
+          </label>
+        </div>
+
+        <div class="setting-row">
+          <label class="setting-label">
+            <span>Gebogene Linien</span>
+            <small>Kurvenverbindungen statt gerade</small>
+          </label>
+          <label class="toggle">
+            <input type="checkbox" id="settingCurved" checked />
+            <span class="toggle-track"><span class="toggle-thumb"></span></span>
+          </label>
+        </div>
+
+        <div class="setting-row">
+          <label class="setting-label">
+            <span>Standardschrift</span>
+            <small>Für neue Textelemente</small>
+          </label>
+          <select id="settingFont" class="setting-select">
+            <option value="Inter">Inter</option>
+            <option value="Georgia">Georgia</option>
+            <option value="monospace">Monospace</option>
+          </select>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       EXPORT DROPDOWN
+  ═══════════════════════════════════════════ -->
+  <div class="dropdown-menu" id="exportMenu" style="display:none;">
+    <button class="dd-item" data-export="png">
+      <i class="fa-regular fa-image"></i> Als PNG exportieren
+    </button>
+    <button class="dd-item" data-export="jpg">
+      <i class="fa-regular fa-image"></i> Als JPG exportieren
+    </button>
+    <button class="dd-item" data-export="json">
+      <i class="fa-regular fa-file-code"></i> Als .denkr speichern
+    </button>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       TOAST NOTIFICATIONS
+  ═══════════════════════════════════════════ -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- Hidden file inputs -->
+  <input type="file" id="fileInputImage" accept="image/*" style="display:none;" />
+  <input type="file" id="fileInputPdf" accept="application/pdf" style="display:none;" />
+  <input type="file" id="fileInputOpen" accept=".denkr,.json" style="display:none;" />
+
+  <!-- Script -->
+  <script src="script.js"></script>
+</body>
+</html>
